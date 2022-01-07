@@ -11,6 +11,10 @@ def steps_to_values(steps: np.ndarray, start_pos: np.ndarray) -> np.ndarray:
     return np.insert(steps, 0, start_pos, axis=0).cumsum(axis=0)
 
 
+def path_to_steps(path: np.ndarray) -> np.ndarray:
+    return path[1:] - path[:-1]
+
+
 def get_score(submission: Submission, path: np.ndarray, matrix: np.ndarray) -> float:
     visited = get_count_of_intersections_with(DROP, path, matrix)
     return 3600 * 1.1 ** visited / \
@@ -22,7 +26,8 @@ def get_start_position(matrix: np.ndarray) -> np.ndarray:
     return np.stack(np.array(np.where(matrix == START)), axis=1)[0]
 
 
-def get_count_of_intersections_with(surface_type: int, path: np.ndarray, matrix: np.ndarray):
+def get_count_of_intersections_with(surface_type: int, orig_path: np.ndarray, matrix: np.ndarray):
+    path = np.unique(orig_path, axis=0)
     filtered = matrix[path[:, 0], path[:, 1]]
     return np.count_nonzero(filtered == surface_type)
 

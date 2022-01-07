@@ -84,21 +84,20 @@ def a_star_algorithm(start_point: tuple[int, int], matrix: np.ndarray, ax, speed
             drop_group, drop_path = get_drop_group(target, vector, matrix)
             filtered_targets.difference_update(drop_group)
 
-            if len(filtered_targets) == 0:
-                result.extend(reverse_path(node, start_point, adjacent))
-                return np.array(result)
-
             print('-' * 10)
             path = reverse_path(node, start_point, adjacent)
+            result.extend(path)
+            result.extend(drop_path)
+            result.pop()
+            draw_path(ax, path, matrix)
+            if len(filtered_targets) == 0:
+                return np.array(result)
             print(vector, node, len(filtered_targets))
             print(path)
-            draw_path(ax, path, matrix)
             start_point = drop_path[-1] if drop_path else node
             queue = {(start_point, vector)}
             # adjacent = {start_point: start_point}
             target = get_nearest(start_point, list(filtered_targets))
-            result.extend(path)
-            result.extend(drop_path)
             print(start_point)
             print('-' * 10)
             continue
