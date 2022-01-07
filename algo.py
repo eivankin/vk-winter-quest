@@ -18,7 +18,7 @@ def reverse_path(node: tuple[int, int], start_point: tuple[int, int], adjacent: 
         node = (i - di, j - dj)
 
     path.insert(0, start_point)
-    return np.array(path)
+    return np.array(path[:-1])
 
 
 def hamiltonian_path(start: tuple[int, int], vector: tuple[int, int],
@@ -26,7 +26,7 @@ def hamiltonian_path(start: tuple[int, int], vector: tuple[int, int],
     if start not in set(route):
         route.append(start)
         if len(set(route)) == len(set(group)):
-            return route
+            return route, vector
         for vertex in set(get_neighbors(start, vector, matrix)).intersection(group):
             candidate = hamiltonian_path(vertex, get_vector(start, vertex),
                                          group, route.copy(), matrix)
@@ -34,11 +34,10 @@ def hamiltonian_path(start: tuple[int, int], vector: tuple[int, int],
                 return candidate
 
 
-def get_drop_group(node: tuple[int, int], vector: tuple[int, int], matrix: np.ndarray) -> tuple[
-    set[tuple[int, int]], list[tuple[int, int]]]:
+def get_drop_group(node: tuple[int, int], vector: tuple[int, int], matrix: np.ndarray):
     group = set()
     queue = {node}
-    path = []
+    path = [node]
 
     while queue:
         vertex = queue.pop()
@@ -48,8 +47,10 @@ def get_drop_group(node: tuple[int, int], vector: tuple[int, int], matrix: np.nd
         group.add(vertex)
 
     if len(group) > 1:
-        print(hamiltonian_path(node, vector, group.difference(node), [], matrix))
-    return group, path
+        result = hamiltonian_path(node, vector, group.difference(node), [], matrix)
+        if result is not None:
+            path, vector = result
+    return group, path, vector
 
 
 def a_star_algorithm(start_point: tuple[int, int], matrix: np.ndarray, ax, speed_lim=3) -> Optional[
@@ -78,10 +79,11 @@ def a_star_algorithm(start_point: tuple[int, int], matrix: np.ndarray, ax, speed
                 vector = vv
 
         if node is None:
-            return
+            draw_path(ax, np.array(result), matrix)
+            return np.array(result)
 
         if node == target:
-            drop_group, drop_path = get_drop_group(target, vector, matrix)
+            drop_group, drop_path, vector = get_drop_group(target, vector, matrix)
             filtered_targets.difference_update(drop_group)
 
             print('-' * 10)
@@ -89,13 +91,15 @@ def a_star_algorithm(start_point: tuple[int, int], matrix: np.ndarray, ax, speed
             result.extend(path)
             result.extend(drop_path)
             result.pop()
-            draw_path(ax, path, matrix)
+            # draw_path(ax, path, matrix)
             if len(filtered_targets) == 0:
+                draw_path(ax, np.array(result), matrix)
                 return np.array(result)
             print(vector, node, len(filtered_targets))
             print(path)
             start_point = drop_path[-1] if drop_path else node
             queue = {(start_point, vector)}
+            distances[start_point] = 0
             # adjacent = {start_point: start_point}
             target = get_nearest(start_point, list(filtered_targets))
             print(start_point)
@@ -122,3 +126,5 @@ def a_star_algorithm(start_point: tuple[int, int], matrix: np.ndarray, ax, speed
 
         queue.remove((node, vector))
         visited.add(node)
+    draw_path(ax, np.array(result), matrix)
+    return np.array(result)
